@@ -1,23 +1,16 @@
-\begin{table}
-\caption{Wyniki dla algorytmów korzystających z modelu KNN dla zbioru Fertility, średnia (odchylenie standardowe).}
-\label{KNNBaseFert}
-\centering
-\begin{tabular}{|c|c|c|c|}
-\hline
-Algorytm & Dokładność & Pole pod krzywą ROC & F1 \\ \hline
-K-FVSNN - $10\%$ usuniętych etykiet & $0.863 (0.046)$ & $0.567 (0.113)$ & $0.807 (0.060)$ \\ \hline
-K-FVSNN - $30\%$ usuniętych etykiet & $0.867 (0.042)$ & $0.511 (0.111)$ & $0.808 (0.058)$ \\ \hline
-K-FVSNN - $50\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.563 (0.119)$ & $0.810 (0.057)$ \\ \hline
-K-FVSNN - $70\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.547 (0.097)$ & $0.810 (0.057)$ \\ \hline
-K-FVSNN - $90\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.509 (0.067)$ & $0.810 (0.057)$ \\ \hline
-K-EVSNN - $10\%$ usuniętych etykiet & $0.863 (0.046)$ & $0.555 (0.116)$ & $0.807 (0.060)$ \\ \hline
-K-EVSNN - $30\%$ usuniętych etykiet & $0.867 (0.042)$ & $0.519 (0.107)$ & $0.808 (0.058)$ \\ \hline
-K-EVSNN - $50\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.527 (0.059)$ & $0.810 (0.057)$ \\ \hline
-K-EVSNN - $70\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.582 (0.079)$ & $0.810 (0.057)$ \\ \hline
-K-EVSNN - $90\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.508 (0.063)$ & $0.810 (0.057)$ \\ \hline
-KNN & $0.847 (0.061)$ & $0.722 (0.159)$ & $0.844 (0.0.61)$ \\ \hline
-\end{tabular}
-\end{table}
+| Algorytm                              | Dokładność     | Pole pod krzywą ROC | F1           |
+|---------------------------------------|----------------|---------------------|--------------|
+| K-FVSNN - 10% usuniętych etykiet      | 0.863 (0.046)  | 0.567 (0.113)       | 0.807 (0.060)|
+| K-FVSNN - 30% usuniętych etykiet      | 0.867 (0.042)  | 0.511 (0.111)       | 0.808 (0.058)|
+| K-FVSNN - 50% usuniętych etykiet      | 0.870 (0.040)  | 0.563 (0.119)       | 0.810 (0.057)|
+| K-FVSNN - 70% usuniętych etykiet      | 0.870 (0.040)  | 0.547 (0.097)       | 0.810 (0.057)|
+| K-FVSNN - 90% usuniętych etykiet      | 0.870 (0.040)  | 0.509 (0.067)       | 0.810 (0.057)|
+| K-EVSNN - 10% usuniętych etykiet      | 0.863 (0.046)  | 0.555 (0.116)       | 0.807 (0.060)|
+| K-EVSNN - 30% usuniętych etykiet      | 0.867 (0.042)  | 0.519 (0.107)       | 0.808 (0.058)|
+| K-EVSNN - 50% usuniętych etykiet      | 0.870 (0.040)  | 0.527 (0.059)       | 0.810 (0.057)|
+| K-EVSNN - 70% usuniętych etykiet      | 0.870 (0.040)  | 0.582 (0.079)       | 0.810 (0.057)|
+| K-EVSNN - 90% usuniętych etykiet      | 0.870 (0.040)  | 0.508 (0.063)       | 0.810 (0.057)|
+| KNN                                   | 0.847 (0.061)  | 0.722 (0.159)       | 0.844 (0.061)|
 
 \begin{table}
 \caption{Wyniki dla algorytmów korzystających z regresji logistycznej dla zbioru Fertility, średnia (odchylenie standardowe).}
