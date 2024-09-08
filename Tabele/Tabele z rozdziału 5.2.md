@@ -30,26 +30,21 @@
 | K-EVSNN - 90% usuniętych etykiet      | 0.870 (0.040)  | 0.525 (0.178)       | 0.810 (0.057)|
 | Regresja Logistyczna                  | 0.854 (0.071)  | 0.807 (0.089)       | 0.837 (0.092)|
 
-\begin{table}
-\caption{Wyniki dla algorytmów korzystających z modelu XGB dla zbioru Fertility, średnia (odchylenie standardowe).}
-\label{XGBBaseFert}
-\centering
-\begin{tabular}{|c|c|c|c|}
-\hline
-Algorytm & Dokładność & Pole pod krzywą ROC & F1 \\ \hline
-K-FVSNN - $10\%$ usuniętych etykiet & $0.847 (0.061)$ & $0.657 (0.148)$ & $0.835 (0.059)$ \\ \hline
-K-FVSNN - $30\%$ usuniętych etykiet & $0.847 (0.057)$ & $0.694 (0.158)$ & $0.832 (0.049)$ \\ \hline
-K-FVSNN - $50\%$ usuniętych etykiet & $0.843 (0.016)$ & $0.601 (0.192)$ & $0.801 (0.036)$ \\ \hline
-K-FVSNN - $70\%$ usuniętych etykiet & $0.857 (0.022)$ & $0.473 (0.137)$ & $0.803 (0.047)$ \\ \hline
-K-FVSNN - $90\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.515 (0.184)$ & $0.810 (0.057)$ \\ \hline
-K-EVSNN - $10\%$ usuniętych etykiet & $0.843 (0.057)$ & $0.654 (0.153)$ & $0.832 (0.055)$ \\ \hline
-K-EVSNN - $30\%$ usuniętych etykiet & $0.847 (0.028)$ & $0.683 (0.199)$ & $0.830 (0.034)$ \\ \hline
-K-EVSNN - $50\%$ usuniętych etykiet & $0.843 (0.016)$ & $0.688 (0.144)$ & $0.796 (0.038)$ \\ \hline
-K-EVSNN - $70\%$ usuniętych etykiet & $0.857 (0.022)$ & $0.449 (0.161)$ & $0.803 (0.047)$ \\ \hline
-K-EVSNN - $90\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.455 (0.201)$ & $0.810 (0.057)$ \\ \hline
-XGBoost & $0.847 (0.061)$ & $0.722 (0.159)$ & $0.844 (0.0.61)$ \\ \hline
-\end{tabular}
-\end{table}
+<h2>Tabela 3: Wyniki dla algorytmów korzystających z modelu XGB dla zbioru Fertility</h2>
+
+| Algorytm                              | Dokładność     | Pole pod krzywą ROC | F1           |
+|---------------------------------------|----------------|---------------------|--------------|
+| K-FVSNN - 10% usuniętych etykiet      | 0.847 (0.061)  | 0.657 (0.148)       | 0.835 (0.059)|
+| K-FVSNN - 30% usuniętych etykiet      | 0.847 (0.057)  | 0.694 (0.158)       | 0.832 (0.049)|
+| K-FVSNN - 50% usuniętych etykiet      | 0.843 (0.016)  | 0.601 (0.192)       | 0.801 (0.036)|
+| K-FVSNN - 70% usuniętych etykiet      | 0.857 (0.022)  | 0.473 (0.137)       | 0.803 (0.047)|
+| K-FVSNN - 90% usuniętych etykiet      | 0.870 (0.040)  | 0.515 (0.184)       | 0.810 (0.057)|
+| K-EVSNN - 10% usuniętych etykiet      | 0.843 (0.057)  | 0.654 (0.153)       | 0.832 (0.055)|
+| K-EVSNN - 30% usuniętych etykiet      | 0.847 (0.028)  | 0.683 (0.199)       | 0.830 (0.034)|
+| K-EVSNN - 50% usuniętych etykiet      | 0.843 (0.016)  | 0.688 (0.144)       | 0.796 (0.038)|
+| K-EVSNN - 70% usuniętych etykiet      | 0.857 (0.022)  | 0.449 (0.161)       | 0.803 (0.047)|
+| K-EVSNN - 90% usuniętych etykiet      | 0.870 (0.040)  | 0.455 (0.201)       | 0.810 (0.057)|
+| XGBoost                               | 0.847 (0.061)  | 0.722 (0.159)       | 0.844 (0.061)|
 
 \begin{table}
 \caption{Wyniki dla algorytmów korzystających z modelu KNN dla zbioru Raisin, średnia (odchylenie standardowe).}
