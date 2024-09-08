@@ -1,37 +1,176 @@
-| Algorytm                              | Dokładność     | Pole pod krzywą ROC | F1           |
-|---------------------------------------|----------------|---------------------|--------------|
-| K-FVSNN - 10% usuniętych etykiet      | 0.863 (0.046)  | 0.567 (0.113)       | 0.807 (0.060)|
-| K-FVSNN - 30% usuniętych etykiet      | 0.867 (0.042)  | 0.511 (0.111)       | 0.808 (0.058)|
-| K-FVSNN - 50% usuniętych etykiet      | 0.870 (0.040)  | 0.563 (0.119)       | 0.810 (0.057)|
-| K-FVSNN - 70% usuniętych etykiet      | 0.870 (0.040)  | 0.547 (0.097)       | 0.810 (0.057)|
-| K-FVSNN - 90% usuniętych etykiet      | 0.870 (0.040)  | 0.509 (0.067)       | 0.810 (0.057)|
-| K-EVSNN - 10% usuniętych etykiet      | 0.863 (0.046)  | 0.555 (0.116)       | 0.807 (0.060)|
-| K-EVSNN - 30% usuniętych etykiet      | 0.867 (0.042)  | 0.519 (0.107)       | 0.808 (0.058)|
-| K-EVSNN - 50% usuniętych etykiet      | 0.870 (0.040)  | 0.527 (0.059)       | 0.810 (0.057)|
-| K-EVSNN - 70% usuniętych etykiet      | 0.870 (0.040)  | 0.582 (0.079)       | 0.810 (0.057)|
-| K-EVSNN - 90% usuniętych etykiet      | 0.870 (0.040)  | 0.508 (0.063)       | 0.810 (0.057)|
-| KNN                                   | 0.847 (0.061)  | 0.722 (0.159)       | 0.844 (0.061)|
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyniki algorytmów KNN i Regresji Logistycznej</title>
+</head>
+<body>
+    <h1>Wyniki algorytmów</h1>
 
-\begin{table}
-\caption{Wyniki dla algorytmów korzystających z regresji logistycznej dla zbioru Fertility, średnia (odchylenie standardowe).}
-\label{LRBaseFert}
-\centering
-\begin{tabular}{|c|c|c|c|}
-\hline
-Algorytm & Dokładność & Pole pod krzywą ROC & F1 \\ \hline
-K-FVSNN - $10\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.586 (0.168)$ & $0.810 (0.057)$ \\ \hline
-K-FVSNN - $30\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.569 (0.144)$ & $0.810 (0.057)$ \\ \hline
-K-FVSNN - $50\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.601 (0.177)$ & $0.810 (0.057)$ \\ \hline
-K-FVSNN - $70\%$ usuniętych etykiet & $0.863 (0.040)$ & $0.495 (0.230)$ & $0.807 (0.055)$ \\ \hline
-K-FVSNN - $90\%$ usuniętych etykiet & $0.867 (0.042)$ & $0.561 (0.166)$ & $0.808 (0.058)$ \\ \hline
-K-EVSNN - $10\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.574 (0.166)$ & $0.810 (0.057)$ \\ \hline
-K-EVSNN - $30\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.571 (0.156)$ & $0.810 (0.057)$ \\ \hline
-K-EVSNN - $50\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.589 (0.194)$ & $0.810 (0.057)$ \\ \hline
-K-EVSNN - $70\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.520 (0.226)$ & $0.810 (0.057)$ \\ \hline
-K-EVSNN - $90\%$ usuniętych etykiet & $0.870 (0.040)$ & $0.525 (0.178)$ & $0.810 (0.057)$ \\ \hline
-Regresja Logistyczna & $0.854 (0.071)$ & $0.807 (0.089)$ & $0.837 (0.092)$ \\ \hline
-\end{tabular}
-\end{table}
+    <h2>Tabela 1: Wyniki dla algorytmów korzystających z modelu KNN dla zbioru Fertility</h2>
+    <table border="1" cellspacing="0" cellpadding="5">
+        <caption>Średnia (odchylenie standardowe)</caption>
+        <thead>
+            <tr>
+                <th>Algorytm</th>
+                <th>Dokładność</th>
+                <th>Pole pod krzywą ROC</th>
+                <th>F1</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>K-FVSNN - 10% usuniętych etykiet</td>
+                <td>0.863 (0.046)</td>
+                <td>0.567 (0.113)</td>
+                <td>0.807 (0.060)</td>
+            </tr>
+            <tr>
+                <td>K-FVSNN - 30% usuniętych etykiet</td>
+                <td>0.867 (0.042)</td>
+                <td>0.511 (0.111)</td>
+                <td>0.808 (0.058)</td>
+            </tr>
+            <tr>
+                <td>K-FVSNN - 50% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.563 (0.119)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-FVSNN - 70% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.547 (0.097)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-FVSNN - 90% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.509 (0.067)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 10% usuniętych etykiet</td>
+                <td>0.863 (0.046)</td>
+                <td>0.555 (0.116)</td>
+                <td>0.807 (0.060)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 30% usuniętych etykiet</td>
+                <td>0.867 (0.042)</td>
+                <td>0.519 (0.107)</td>
+                <td>0.808 (0.058)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 50% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.527 (0.059)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 70% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.582 (0.079)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 90% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.508 (0.063)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>KNN</td>
+                <td>0.847 (0.061)</td>
+                <td>0.722 (0.159)</td>
+                <td>0.844 (0.061)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Tabela 2: Wyniki dla algorytmów korzystających z regresji logistycznej dla zbioru Fertility</h2>
+    <table border="1" cellspacing="0" cellpadding="5">
+        <caption>Średnia (odchylenie standardowe)</caption>
+        <thead>
+            <tr>
+                <th>Algorytm</th>
+                <th>Dokładność</th>
+                <th>Pole pod krzywą ROC</th>
+                <th>F1</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>K-FVSNN - 10% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.586 (0.168)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-FVSNN - 30% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.569 (0.144)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-FVSNN - 50% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.601 (0.177)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-FVSNN - 70% usuniętych etykiet</td>
+                <td>0.863 (0.040)</td>
+                <td>0.495 (0.230)</td>
+                <td>0.807 (0.055)</td>
+            </tr>
+            <tr>
+                <td>K-FVSNN - 90% usuniętych etykiet</td>
+                <td>0.867 (0.042)</td>
+                <td>0.561 (0.166)</td>
+                <td>0.808 (0.058)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 10% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.574 (0.166)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 30% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.571 (0.156)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 50% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.589 (0.194)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 70% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.520 (0.226)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>K-EVSNN - 90% usuniętych etykiet</td>
+                <td>0.870 (0.040)</td>
+                <td>0.525 (0.178)</td>
+                <td>0.810 (0.057)</td>
+            </tr>
+            <tr>
+                <td>Regresja Logistyczna</td>
+                <td>0.854 (0.071)</td>
+                <td>0.807 (0.089)</td>
+                <td>0.837 (0.092)</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
 
 \begin{table}
 \caption{Wyniki dla algorytmów korzystających z modelu XGB dla zbioru Fertility, średnia (odchylenie standardowe).}
