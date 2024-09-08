@@ -1,4 +1,5 @@
 <h2>Tabela 1: Wyniki dla algorytmów korzystających z modelu KNN dla zbioru Fertility</h2>
+
 | Algorytm                              | Dokładność     | Pole pod krzywą ROC | F1           |
 |---------------------------------------|----------------|---------------------|--------------|
 | K-FVSNN - 10% usuniętych etykiet      | 0.863 (0.046)  | 0.567 (0.113)       | 0.807 (0.060)|
@@ -14,6 +15,7 @@
 | KNN                                   | 0.847 (0.061)  | 0.722 (0.159)       | 0.844 (0.061)|
     
 <h2>Tabela 2: Wyniki dla algorytmów korzystających z regresji logistycznej dla zbioru Fertility</h2>
+
 | Algorytm                              | Dokładność     | Pole pod krzywą ROC | F1           |
 |---------------------------------------|----------------|---------------------|--------------|
 | K-FVSNN - 10% usuniętych etykiet      | 0.870 (0.040)  | 0.586 (0.168)       | 0.810 (0.057)|
