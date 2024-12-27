@@ -1,0 +1,150 @@
+# Define parameters
+classifiers = {
+    'knn': KNeighborsClassifier(),
+    'xgb': XGBClassifier(random_state=2024, objective='binary:logistic'),
+    'lr': LogisticRegression(random_state=2024,solver='liblinear')
+}
+fraction = [0, 0.1, 0.3, 0.5, 0.7, 0.9]
+num_iterations = 10  
+
+results = []
+
+for iteration in range(num_iterations):
+    df_train, df_test = train_test_split(med, test_size=0.3, random_state=2024 - iteration**(2))
+    
+    for frac in fraction:
+        erased_df = label_erase(dataframe=df_train, fraction=frac, column_name='class', percent_erased_ones=df_train[df_train['class'] == df_train['class'].unique()[1]].shape[0]/df_train['class'].shape[0])
+        Labeled = erased_df.dropna(subset=['class'])
+        Unlabeled = erased_df.drop(Labeled.index)
+        
+        for clf_name, clf in classifiers.items():
+            X = active_learning_shapley(Labeled, Unlabeled, classifier=clf, distance_param=1, 
+                                        val_member=1, train_member=1,
+                                        K_percent=10, 
+                                        target_column='class')
+            clf.fit(X.drop('class', axis=1), X['class'])
+            y_pred = clf.predict(df_test.drop(['class'], axis=1))
+            y_pred_proba = clf.predict_proba(df_test.drop(['class'], axis=1))[:, 1] if hasattr(clf, "predict_proba") else np.zeros(len(y_pred))
+
+            F1_KFVSNN = f1_score(df_test['class'], y_pred, average='weighted')
+            roc_auc_KFVSNN = roc_auc_score(df_test['class'], y_pred_proba)
+            accuracy_KFVSNN = accuracy_score(df_test['class'], y_pred)
+
+            clf = classifiers[clf_name]
+            X = active_learning_shapley(Labeled, Unlabeled, classifier=clf,
+                                        K_percent=10, target_column='class', shapley_method='exact')
+            clf.fit(X.drop('class', axis=1), X['class'])
+            y_pred = clf.predict(df_test.drop(['class'], axis=1))
+            y_pred_proba = clf.predict_proba(df_test.drop(['class'], axis=1))[:, 1] if hasattr(clf, "predict_proba") else np.zeros(len(y_pred))
+
+            F1_KEVSNN = f1_score(df_test['class'], y_pred, average='weighted')
+            roc_auc_KEVSNN = roc_auc_score(df_test['class'], y_pred_proba)
+            accuracy_KEVSNN = accuracy_score(df_test['class'], y_pred)
+
+            clf = classifiers[clf_name]
+            clf.fit(Labeled.drop('class', axis=1), Labeled['class'])
+            y_pred = clf.predict(df_test.drop(['class'], axis=1))
+            y_pred_proba = clf.predict_proba(df_test.drop(['class'], axis=1))[:, 1] if hasattr(clf, "predict_proba") else np.zeros(len(y_pred))
+
+            F1_erased = f1_score(df_test['class'], y_pred, average='weighted')
+            roc_auc_erased = roc_auc_score(df_test['class'], y_pred_proba)
+            accuracy_erased = accuracy_score(df_test['class'], y_pred)
+
+            results.append([frac, clf_name,
+                            F1_KFVSNN, roc_auc_KFVSNN, accuracy_KFVSNN,
+                            F1_KEVSNN, roc_auc_KEVSNN, accuracy_KEVSNN,
+                            F1_erased, roc_auc_erased, accuracy_erased])
+
+results_df_med = pd.DataFrame(results, columns=['fraction', 'classifier',
+                                                'F1 K-FVSNN', 'roc_auc K-FVSNN', 'accuracy K-FVSNN',
+                                                'F1 K-EVSNN', 'roc_auc K-EVSNN', 'accuracy K-EVSNN',
+                                                'F1 erased', 'roc_auc erased', 'accuracy erased'])
+
+mean_results_df_med = results_df_med.groupby(['fraction', 'classifier']).mean().reset_index()
+std_results_df_med = results_df_med.groupby(['fraction', 'classifier']).std().reset_index()
+
+mean_std_results_df_med = pd.merge(mean_results_df_med, std_results_df_med, on=['fraction', 'classifier'], suffixes=('', '_std'))
+
+metrics = ['F1', 'roc_auc', 'accuracy']
+model_types = ['K-FVSNN', 'K-EVSNN', 'erased']
+
+xgb_data = mean_std_results_df_med[mean_std_results_df_med['classifier'] == 'xgb']
+
+for model_type in model_types:
+    print(f'\nModel: {model_type}')
+    print('-' * 40)
+    
+    for metric in metrics:
+        column_name = f'{metric} {model_type}'
+        std_column_name = f'{metric} {model_type}_std'
+        
+        if column_name not in xgb_data.columns:
+            print(f'Column {column_name} not found in data.')
+            continue
+        
+        for fraction in xgb_data['fraction'].unique():
+            fraction_data = xgb_data[xgb_data['fraction'] == fraction]
+            
+            if fraction_data.empty:
+                continue
+            
+            max_value = fraction_data[column_name].max()
+            max_row = fraction_data[fraction_data[column_name] == max_value]
+            max_std = max_row[std_column_name].values[0] if not max_row.empty else None
+            
+            print(f'Fraction: {fraction}')
+            print(f'Max {metric}: {max_value:.4f} ± {max_std:.4f}')
+            print(max_row[['fraction', 'classifier', column_name, std_column_name]])
+            print()
+
+sns.set(style="whitegrid")
+
+metrics = ['F1', 'roc_auc', 'accuracy']
+
+metric_map = {
+    'F1': ['F1 K-FVSNN', 'F1 K-EVSNN'],
+    'roc_auc': ['roc_auc K-FVSNN', 'roc_auc K-EVSNN'],
+    'accuracy': ['accuracy K-FVSNN', 'accuracy K-EVSNN']
+}
+
+legend_labels = {
+    'F1 K-FVSNN': 'F1 K-FVSNN',
+    'F1 K-EVSNN': 'F1 K-EVSNN',
+    'roc_auc K-FVSNN': 'ROC AUC K-FVSNN',
+    'roc_auc K-EVSNN': 'ROC AUC K-EVSNN',
+    'accuracy K-FVSNN': 'Accuracy K-FVSNN',
+    'accuracy K-EVSNN': 'Accuracy K-EVSNN'
+}
+
+classifier_names = [
+    #'knn', 
+    'xgb', 
+    #'lr'
+]
+
+output_dir = ...
+
+for metric in metrics:
+    for clf_name in classifier_names:
+        plt.figure(figsize=(12, 6))
+        
+        data = results_df_med[(results_df_med['classifier'] == clf_name) & 
+                              (results_df_med['fraction'] != 0)]
+
+        melted_data = data.melt(id_vars=['fraction'], value_vars=metric_map[metric], 
+                                var_name='Model', value_name=metric)
+        
+        melted_data['Model'] = melted_data['Model'].map(legend_labels)
+        
+        sns.boxplot(x='fraction', y=metric, hue='Model', data=melted_data)
+        
+        plt.title(f'{metric} for {clf_name.upper()}')
+        plt.xlabel('Fraction of missing labels')
+        plt.ylabel(metric)
+        plt.legend(title='Model')
+        
+        file_name = f"{metric}_{clf_name}.png"
+        plt.savefig(f"{output_dir}{file_name}", dpi=300, bbox_inches='tight')
+        print(f"Saved plot: {output_dir}{file_name}")
+        
+        plt.close()  
