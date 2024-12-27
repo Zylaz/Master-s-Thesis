@@ -1,0 +1,239 @@
+import pandas as pd
+import operator
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns 
+plt.style.use('ggplot')
+from scipy.spatial import distance
+from sklearn.base import clone
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split, KFold, StratifiedShuffleSplit, StratifiedKFold, RandomizedSearchCV
+from sklearn.metrics import accuracy_score, roc_auc_score, auc, f1_score, roc_curve, precision_score, recall_score
+from xgboost import XGBClassifier
+from sklearn.model_selection import KFold
+from unidecode import unidecode
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.preprocessing import StandardScaler
+import skfuzzy as fuzz
+import csv
+import shap
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
+import random
+from sklearn.metrics.pairwise import euclidean_distances
+
+def label_erase(dataframe, column_name=None, fraction=0.5, percent_erased_ones=0.5):
+    
+    dataframe_copy = dataframe.copy()
+
+    if dataframe_copy.shape[1] == 1:
+        target_column = dataframe_copy.columns[0]
+    else:
+        if column_name is None:
+            raise ValueError("Column name cannot be None.")
+        target_column = column_name
+
+    if fraction is not None:
+        if not 0 <= fraction <= 1:
+            raise ValueError("Fraction must be in range [0, 1].")
+    else:
+        raise ValueError("Fraction cannot be None.")
+
+    if percent_erased_ones is not None:
+        if not 0 <= percent_erased_ones <= 1:
+            raise ValueError("Percent erased ones must be in range [0, 1].")
+
+    total_values = dataframe_copy[target_column].notna().sum()
+
+    unique_values = dataframe_copy[target_column].unique()
+
+    ones_count = dataframe_copy[dataframe_copy[target_column] == unique_values[1]].shape[0]
+    zeros_count = dataframe_copy[dataframe_copy[target_column] == unique_values[0]].shape[0]
+
+    ones_to_erase = round(total_values * fraction * percent_erased_ones)
+    zeros_to_erase = round(total_values * fraction * (1 - percent_erased_ones))
+
+    ones_to_erase = min(ones_to_erase, ones_count)
+    zeros_to_erase = min(zeros_to_erase, zeros_count)
+
+    zeros_indices = dataframe_copy[dataframe_copy[target_column] == unique_values[0]].sample(n=zeros_to_erase, random_state=42).index
+    ones_indices = dataframe_copy[dataframe_copy[target_column] == unique_values[1]].sample(n=ones_to_erase, random_state=42).index
+
+    dataframe_copy.loc[zeros_indices, target_column] = np.nan
+    dataframe_copy.loc[ones_indices, target_column] = np.nan
+
+    return dataframe_copy
+    
+def calculate_membership_weights(X_train, X_val):
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_val_scaled = scaler.transform(X_val)
+    
+    center_train = X_train_scaled.mean(axis=0)
+    center_val = X_val_scaled.mean(axis=0)
+    
+    distances_train = np.linalg.norm(X_train_scaled - center_train, axis=1)
+    distances_val = np.linalg.norm(X_train_scaled - center_val, axis=1)
+    
+    membership_weights_train = 1 / (1 + distances_train)
+    membership_weights_val = 1 / (1 + distances_val)
+    
+    return membership_weights_train, membership_weights_val
+
+def fuzzy_shapley_values(X_train, y_train, X_val, y_val, K=5, distance_param=1, val_member=1, train_member=1, 
+                         metric='euclidean', shap_values=None, shap_distance=False):
+    n_train = len(X_train)
+    n_val = len(X_val)
+    fuzzy_shapley_vals = np.zeros(n_train)
+    scaler = StandardScaler()
+    X_train_scal = scaler.fit_transform(X_train)
+    X_val_scal = scaler.transform(X_val)
+
+    if shap_values is None:
+        shap_values = np.ones(X_train.shape[1])
+
+    membership_weights_train, membership_weights_val = calculate_membership_weights(X_train, X_val)
+
+    if shap_distance:
+        for j in range(n_val):
+            shapley_weighted_distances = np.zeros(n_train)
+            for i in range(n_train):
+                # Oblicz odległość element po elemencie z uwzględnieniem wag Shapley
+                shapley_weighted_distance = np.sum(np.abs(X_train.iloc[i] - X_val.iloc[j]) * shap_values)
+                shapley_weighted_distances[i] = shapley_weighted_distance
+            
+            sorted_indices = np.argsort(shapley_weighted_distances)
+            fuzzy_weights = (1 / (1 + np.array(shapley_weighted_distances)[sorted_indices]) ** distance_param) * \
+                            ((1 + membership_weights_val[sorted_indices]) ** val_member) * \
+                            ((1+membership_weights_train[sorted_indices]) ** train_member)
+            for i in range(n_train-1, -1, -1):  
+                if i == n_train - 1:  
+                    fuzzy_shapley_vals[sorted_indices[i]] += (y_train.iloc[sorted_indices[i]] == y_val.iloc[j]) * fuzzy_weights[i] / K
+                else:  
+                    prev_count = (y_train.iloc[sorted_indices[:i+1]] == y_val.iloc[j]).sum() * fuzzy_weights[:i+1].sum()
+                    current_count = (y_train.iloc[sorted_indices[:i+2]] == y_val.iloc[j]).sum() * fuzzy_weights[:i+2].sum()
+                    fuzzy_shapley_vals[sorted_indices[i]] += (current_count - prev_count) * min(K, i+1) / (K * (i+1))
+    else:
+        for j in range(n_val):
+            distances = distance.cdist(X_train_scal, X_val_scal[j].reshape(1, -1), metric)
+            sorted_indices = np.argsort(distances.flatten())
+            fuzzy_weights = (1 / (1 + distances.flatten()[sorted_indices]) ** distance_param) * \
+                            ((1 + membership_weights_val[sorted_indices]) ** val_member) * \
+                            ((1 + membership_weights_train[sorted_indices]) ** train_member)
+            for i in range(n_train-1, -1, -1):  
+                if i == n_train - 1:  
+                    fuzzy_shapley_vals[sorted_indices[i]] += (y_train.iloc[sorted_indices[i]] == y_val.iloc[j]) * fuzzy_weights[i] / K
+                else:  
+                    prev_count = (y_train.iloc[sorted_indices[:i+1]] == y_val.iloc[j]).sum() * fuzzy_weights[:i+1].sum()
+                    current_count = (y_train.iloc[sorted_indices[:i+2]] == y_val.iloc[j]).sum() * fuzzy_weights[:i+2].sum()
+                    fuzzy_shapley_vals[sorted_indices[i]] += (current_count - prev_count) * min(K, i+1) / (K * (i+1))
+
+    fuzzy_shapley_vals /= n_val
+
+    return fuzzy_shapley_vals
+
+def shapley_values(X_train, y_train, X_val, y_val, K=5):
+    n_train = len(X_train)
+    n_val = len(X_val)
+    shapley_vals = np.zeros(n_train)
+
+    for j in range(n_val):
+        distances = distance.cdist(X_train, X_val.iloc[j].values.reshape(1, -1), 'euclidean')
+        sorted_indices = np.argsort(distances.flatten())
+        for i in range(n_train-1, -1, -1):  
+            if i == n_train - 1: 
+                shapley_vals[sorted_indices[i]] += (y_train.iloc[sorted_indices[i]] == y_val.iloc[j]) / K
+            else:  
+                prev_count = (y_train.iloc[sorted_indices[:i+1]] == y_val.iloc[j]).sum()
+                current_count = (y_train.iloc[sorted_indices[:i+2]] == y_val.iloc[j]).sum()
+                shapley_vals[sorted_indices[i]] += (current_count -
+                                                    prev_count) * min(K, i+1) / (K * (i+1))
+
+    shapley_vals /= n_val
+
+    return shapley_vals
+
+
+def active_learning_shapley(X_labeled, X_unlabeled, target_column,
+                            classifier, K_percent=5, distance_param=-1, val_member=1, train_member=-1,
+                            tol_percent_expected_shapley=25, max_iter=200, early_stopping_criterion=None,
+                            error_plateau_tol=0.01, error_plateau_patience=5,
+                            shapley_method="fuzzy", shap_distance=False):
+
+    X_labeled_copy = X_labeled.copy()
+    X_unlabeled_copy = X_unlabeled.copy()
+
+    prev_mean_shapley_val = None
+    prev_val_error = None
+    iteration = 0
+
+    while len(X_unlabeled_copy) > 0 and iteration < max_iter:
+        
+        semi_labeled_indices = []
+
+        K = max(1, int(len(X_unlabeled_copy) * K_percent / 100))
+
+        classifier.fit(X_labeled_copy.drop(target_column, axis=1), X_labeled_copy[target_column])
+
+        X_unlabeled_copy[target_column] = classifier.predict(X_unlabeled_copy.drop(target_column, axis=1))
+
+        if shap_distance:
+            if isinstance(classifier, KNeighborsClassifier):
+                explainer = shap.KernelExplainer(classifier.predict, X_labeled_copy.drop(target_column, axis=1))
+            else:
+                explainer = shap.Explainer(classifier)
+            shap_values = explainer(X_labeled_copy.drop(target_column, axis=1))
+            shap_values_df = pd.DataFrame(shap_values.values, columns=X_labeled_copy.drop(target_column, axis=1).columns)
+            mean_shap_values = shap_values_df.abs().mean()
+
+        if shapley_method == "fuzzy":
+            if shap_distance:
+                shapley_vals = fuzzy_shapley_values(X_unlabeled_copy.drop(target_column, axis=1), X_unlabeled_copy[target_column],
+                                                    X_labeled_copy.drop(target_column, axis=1), X_labeled_copy[target_column], K=K,
+                                                    distance_param=distance_param, val_member=val_member, train_member=train_member, shap_values=mean_shap_values, shap_distance=shap_distance)
+            else:
+                shapley_vals = fuzzy_shapley_values(X_unlabeled_copy.drop(target_column, axis=1), X_unlabeled_copy[target_column],
+                                                    X_labeled_copy.drop(target_column, axis=1), X_labeled_copy[target_column], K=K,
+                                                    distance_param=distance_param, val_member=val_member, train_member=train_member)
+
+        elif shapley_method == "exact":
+            shapley_vals = shapley_values(X_unlabeled_copy.drop(target_column, axis=1), X_unlabeled_copy[target_column],
+                                          X_labeled_copy.drop(target_column, axis=1), X_labeled_copy[target_column], K=K)
+        else:
+            raise ValueError("Invalid shapley method. Choose from 'fuzzy' or 'exact'.")
+
+        threshold = np.mean(shapley_vals) + np.std(shapley_vals)
+
+        top_indices = np.where(shapley_vals >= threshold)[0]
+
+        if len(top_indices) == 0:
+            break
+
+        semi_labeled_indices.extend(top_indices)
+
+        new_X_labeled = pd.concat([X_labeled_copy, X_unlabeled_copy.iloc[top_indices]]).sort_index()
+        X_labeled_copy = new_X_labeled
+
+        X_unlabeled_copy = X_unlabeled_copy.drop(X_unlabeled_copy.index[top_indices])
+
+        if len(X_unlabeled_copy) == 0:
+            break
+
+        val_preds = classifier.predict(X_unlabeled_copy.drop(target_column, axis=1))
+        val_true = X_unlabeled_copy[target_column]
+        val_error = np.mean(val_preds != val_true)
+
+        if early_stopping_criterion == "error_plateau":
+            if prev_val_error is not None:
+                if abs(val_error - prev_val_error) < error_plateau_tol:
+                    patience_counter += 1
+                    if patience_counter >= error_plateau_patience:
+                        break
+            else:
+                patience_counter = 0
+            prev_val_error = val_error
+
+        iteration += 1
+
+    return X_labeled_copy
