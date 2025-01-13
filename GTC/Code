@@ -1,0 +1,68 @@
+def calculate_refined_uncertainty(X_train, y_train, k=2, weights=None):
+    """
+    Calculate uncertainty for each observation with refined similarity factor calculation.
+
+    Parameters:
+        X_train (pd.DataFrame): Feature matrix for training data.
+        y_train (pd.Series): Given labels for the training data.
+        k (int): Number of clusters for the unsupervised algorithm.
+        weights (list): Weights for each labeling method. Length must be k.
+
+    Returns:
+        pd.DataFrame: Updated training data with an 'uncertainty' column.
+    """
+    # Default weights: equal for all labeling methods
+    if weights is None:
+        weights = [1 / k] * k
+
+    # Validate weights
+    assert len(weights) == k, "Number of weights must match the number of labeling methods."
+    assert np.isclose(sum(weights), 1), "Weights must sum to 1."
+
+    # Initialize uncertainty column
+    X_train['uncertainty'] = 1.0
+
+    # Step 1: Use k-means clustering for unsupervised labeling
+    kmeans = KMeans(n_clusters=len(np.unique(y_train)), random_state=42)
+    cluster_labels = kmeans.fit_predict(X_train)
+    membership = normalize(kmeans.transform(X_train), norm='l1', axis=1)  # Membership values
+
+    # Step 2: Map clusters to labels using majority voting
+    cluster_to_label_map = {}
+    for cluster in range(len(np.unique(cluster_labels))):
+        # Get observations in the current cluster
+        cluster_indices = np.where(cluster_labels == cluster)[0]
+        # Get the corresponding labels for these observations
+        labels_in_cluster = y_train.iloc[cluster_indices]
+        # Map cluster to the most frequent label
+        cluster_to_label_map[cluster] = labels_in_cluster.value_counts().idxmax()
+
+    # Step 3: Calculate uncertainty for each observation
+    for idx in range(len(X_train)):
+        U_j = 1  # Initialize uncertainty
+        
+        for i in range(k):
+            if i == 0:  # First labeling method: Given labels
+                f_mu_i = 1
+                s_i = 1
+            else:  # Other labeling methods: Unsupervised clustering
+                membership_values = membership[idx]  # Membership values for the current observation
+                s_i = 0  # Initialize similarity factor for this labeling method
+
+                # Iterate through all clusters and include their contributions
+                for cluster, membership_value in enumerate(membership_values):
+                    mapped_label = cluster_to_label_map[cluster]
+                    label_match = 1 if mapped_label == y_train.iloc[idx] else -1
+                    s_i += membership_value * label_match  # Sum the contribution of each cluster
+
+                # Normalize s_i to ensure it lies in [-1, 1]
+                s_i = np.clip(s_i, -1, 1)
+                f_mu_i = 1  # Membership value for unsupervised method is already incorporated in s_i
+
+            # Update U_j using the formula
+            U_j -= weights[i] * f_mu_i * s_i
+        
+        # Assign the calculated uncertainty
+        X_train.at[idx, 'uncertainty'] = U_j
+
+    return X_train
