@@ -1,3 +1,47 @@
+def map_clusters_by_centroid(X_train, y_train, cluster_labels):
+    """
+    Map unsupervised cluster labels to given labels based on centroid proximity.
+
+    Parameters:
+        X_train (pd.DataFrame): Feature matrix for training data.
+        y_train (pd.Series): Given labels for the training data.
+        cluster_labels (np.ndarray): Cluster labels from an unsupervised method.
+
+    Returns:
+        dict: Mapping from unsupervised cluster labels to given labels.
+    """
+    # Step 1: Calculate centroids for given labels
+    unique_given_labels = np.unique(y_train)
+    given_centroids = []
+    for label in unique_given_labels:
+        # Select observations corresponding to this label
+        label_indices = np.where(y_train == label)[0]
+        centroid = X_train.iloc[label_indices].mean(axis=0)
+        given_centroids.append(centroid)
+    given_centroids = np.array(given_centroids)
+
+    # Step 2: Calculate centroids for unsupervised clusters
+    unique_clusters = np.unique(cluster_labels)
+    unsupervised_centroids = []
+    for cluster in unique_clusters:
+        # Select observations corresponding to this cluster
+        cluster_indices = np.where(cluster_labels == cluster)[0]
+        centroid = X_train.iloc[cluster_indices].mean(axis=0)
+        unsupervised_centroids.append(centroid)
+    unsupervised_centroids = np.array(unsupervised_centroids)
+
+    # Step 3: Map each unsupervised cluster to the closest given label
+    cluster_to_label_map = {}
+    for i, unsupervised_centroid in enumerate(unsupervised_centroids):
+        closest_label_idx = pairwise_distances_argmin(
+            [unsupervised_centroid], given_centroids
+        )[0]
+        cluster_to_label_map[i] = unique_given_labels[closest_label_idx]
+
+    return cluster_to_label_map
+
+
+
 def calculate_refined_uncertainty(X_train, y_train, k=2, weights=None):
     """
     Calculate uncertainty for each observation with refined similarity factor calculation.
@@ -23,19 +67,12 @@ def calculate_refined_uncertainty(X_train, y_train, k=2, weights=None):
     X_train['uncertainty'] = 1.0
 
     # Step 1: Use k-means clustering for unsupervised labeling
-    kmeans = KMeans(n_clusters=len(np.unique(y_train)), random_state=42)
+    kmeans = KMeans(n_clusters=len(np.unique(y_train)), random_state=2024)
     cluster_labels = kmeans.fit_predict(X_train)
     membership = normalize(kmeans.transform(X_train), norm='l1', axis=1)  # Membership values
 
-    # Step 2: Map clusters to labels using majority voting
-    cluster_to_label_map = {}
-    for cluster in range(len(np.unique(cluster_labels))):
-        # Get observations in the current cluster
-        cluster_indices = np.where(cluster_labels == cluster)[0]
-        # Get the corresponding labels for these observations
-        labels_in_cluster = y_train.iloc[cluster_indices]
-        # Map cluster to the most frequent label
-        cluster_to_label_map[cluster] = labels_in_cluster.value_counts().idxmax()
+    # Step 2: Map clusters to labels using centroid-based method
+    cluster_to_label_map = map_clusters_by_centroid(X_train, y_train, cluster_labels)
 
     # Step 3: Calculate uncertainty for each observation
     for idx in range(len(X_train)):
